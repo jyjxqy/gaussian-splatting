@@ -194,7 +194,8 @@ def training_report(tb_writer, iteration, Ll1, loss, l1_loss, elapsed, testing_i
 
 def set_args(args):
     args.start_checkpoint = None
-    args.source_path = r'E:\Packages\Datasets\tandt\tandt_db\tandt\train'
+    if not args.source_path:
+        args.source_path = r'E:\Packages\Datasets\tandt\tandt_db\tandt\train'
     args.model_path = 'output/debug'
     # args.loaded_iter = 3000
     args.checkpoint_iterations = [3000,7000,30000]
