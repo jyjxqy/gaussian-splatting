@@ -12,9 +12,13 @@
 import os
 import random
 import json
+
+import torch
+
 from utils.system_utils import searchForMaxIteration
 from scene.dataset_readers import sceneLoadTypeCallbacks
-from scene.gaussian_model import GaussianModel
+# FIXME 改回GaussianModel
+from scene.gaussian_model import MyGaussianModel as GaussianModel
 from arguments import ModelParams
 from utils.camera_utils import cameraList_from_camInfos, camera_to_JSON
 
@@ -84,10 +88,26 @@ class Scene:
 
     def save(self, iteration):
         point_cloud_path = os.path.join(self.model_path, "point_cloud/iteration_{}".format(iteration))
+        camera_pose_path = os.path.join(self.model_path, "camera_pose/iteration_{}".format(iteration))
         self.gaussians.save_ply(os.path.join(point_cloud_path, "point_cloud.ply"))
+        self.gaussians.save_poses(camera_pose_path)
 
     def getTrainCameras(self, scale=1.0):
         return self.train_cameras[scale]
 
     def getTestCameras(self, scale=1.0):
         return self.test_cameras[scale]
+
+
+class MyScene(Scene):
+    def __init__(self, *args, poses=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        train_camera_num = len(self.getTrainCameras())
+        if poses is not None:
+            assert len(poses) == train_camera_num, 'initial poses should have the same length with training cameras.'
+            assert poses.shape[1] == 6, 'each pose should be embedded with 6 numbers.'
+        else:
+            poses = torch.zeros(train_camera_num, 6)
+        self.gaussians.load_poses(poses)
+
+
